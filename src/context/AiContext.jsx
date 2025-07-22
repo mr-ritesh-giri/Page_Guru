@@ -7,7 +7,7 @@ export const AiProvider = ({ children }) => {
   const [messages, setMessages] = useState([
     {
       role: "system",
-      content: "You are helpful assistant.",
+      content: "You are a helpful assistant.",
     },
   ]);
 
@@ -16,7 +16,7 @@ export const AiProvider = ({ children }) => {
   const [error, setError] = useState("");
 
   const [apiKey, setApiKey] = useState(() => {
-    localStorage.getItem("OPENAI_KEY" || "");
+    return localStorage.getItem("OPENAI_KEY") || "";
   });
 
   const saveKey = (k) => {
@@ -25,7 +25,7 @@ export const AiProvider = ({ children }) => {
   };
 
   const getClient = () => {
-    new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+    return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
   };
 
   const send = async () => {
@@ -34,18 +34,19 @@ export const AiProvider = ({ children }) => {
     setMessages((m) => [...m, newUserMessage]);
     setInput("");
     setLoading(true);
+    setError("");
 
     try {
       const ai = getClient();
       const res = await ai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [...messages, newUserMessage],
-        temprature: 0.7,
+        temperature: 0.7,
       });
       const assistantMsg = res.choices[0].message;
       setMessages((m) => [...m, assistantMsg]);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       setError(e.message || "Request Failed");
     } finally {
       setLoading(false);
@@ -61,6 +62,7 @@ export const AiProvider = ({ children }) => {
         loading,
         error,
         apiKey,
+        setApiKey,
         saveKey,
         send,
       }}

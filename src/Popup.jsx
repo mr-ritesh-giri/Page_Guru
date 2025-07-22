@@ -1,15 +1,15 @@
 import { useState } from "react";
 import HomeWindow from "./components/HomeWindow";
 import ChatWindow from "./components/ChatWindow";
+import { AiProvider, useAi } from "./context/AiContext";
 
 const Popup = () => {
-  const [apiKey, setApiKey] = useState("");
+  const { apiKey, setApiKey } = useAi();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleContinue = () => {
-    console.log("Handle Continue Clicked");
-
     if (apiKey.trim().startsWith("sk-")) {
+      localStorage.setItem("OPENAI_KEY", apiKey.trim());
       setIsAuthenticated(true);
     } else {
       alert("Please enter a valid OpenAI API key.");
@@ -19,17 +19,15 @@ const Popup = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 transition-all duration-700">
       {!isAuthenticated ? (
-        <div>
-          <HomeWindow
-            apiKey={apiKey}
-            setApiKey={setApiKey}
-            handleSubmit={handleContinue}
-          />
-        </div>
+        <HomeWindow
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          handleSubmit={handleContinue}
+        />
       ) : (
-        <div>
-          <ChatWindow apiKey={apiKey} />
-        </div>
+        <AiProvider>
+          <ChatWindow />
+        </AiProvider>
       )}
     </div>
   );

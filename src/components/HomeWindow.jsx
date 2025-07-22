@@ -8,7 +8,6 @@ function HomeWindow({ apiKey, setApiKey, handleSubmit }) {
         </p>
       </div>
 
-      {/* API Key Input */}
       <div className="mt-6 space-y-2">
         <label className="block text-xs text-gray-600">
           Enter your OpenAI API Key
@@ -31,7 +30,6 @@ function HomeWindow({ apiKey, setApiKey, handleSubmit }) {
         </button>
       </div>
 
-      {/* Info */}
       <div className="mt-6 text-gray-600 text-sm space-y-3">
         <p>✅ We never store your API key.</p>
         <p>🧠 Used locally to answer your questions.</p>
