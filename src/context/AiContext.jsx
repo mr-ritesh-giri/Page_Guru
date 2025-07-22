@@ -1,49 +1,52 @@
 import { createContext, useContext, useState } from "react";
 import OpenAI from "openai";
-import genAiPrompts from "../content/genAiPrompts";
 
 const AiContext = createContext();
-
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPEN_AI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
 
 export const AiProvider = ({ children }) => {
   const [messages, setMessages] = useState([
     {
       role: "system",
-      content: genAiPrompts,
+      content: "You are helpful assistant.",
     },
   ]);
-  const [aiResponse, setAiResponse] = useState("");
-  const [userPrompt, setUserPrompt] = useState("");
+
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const generateResponse = async () => {
+  const [apiKey, setApiKey] = useState(() => {
+    localStorage.getItem("OPENAI_KEY" || "");
+  });
+
+  const saveKey = (k) => {
+    localStorage.setItem("OPENAI_KEY", k);
+    setApiKey(k);
+  };
+
+  const getClient = () => {
+    new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  };
+
+  const send = async () => {
+    if (!input.trim() || !apiKey) return;
+    const newUserMessage = { role: "user", content: input };
+    setMessages((m) => [...m, newUserMessage]);
+    setInput("");
+    setLoading(true);
+
     try {
-      setLoading(true);
-
-      const newMessages = [...messages, { role: "user", content: userPrompt }];
-
-      const response = await openai.chat.completions.create({
+      const ai = getClient();
+      const res = await ai.chat.completions.create({
         model: "gpt-3.5-turbo",
-        messages: newMessages,
-        temperature: 0.7,
+        messages: [...messages, newUserMessage],
+        temprature: 0.7,
       });
-
-      const botReply =
-        response.choices[0]?.message?.content?.trim() || "No response";
-
-      setMessages([
-        ...newMessages,
-        { role: "user", content: userPrompt },
-        { role: "assistant", content: botReply },
-      ]);
-      setAiResponse(botReply);
-    } catch (err) {
-      console.error("OpenAI error:", err);
-      setAiResponse("Something went wrong!");
+      const assistantMsg = res.choices[0].message;
+      setMessages((m) => [...m, assistantMsg]);
+    } catch (e) {
+      console.log(e);
+      setError(e.message || "Request Failed");
     } finally {
       setLoading(false);
     }
@@ -51,7 +54,16 @@ export const AiProvider = ({ children }) => {
 
   return (
     <AiContext.Provider
-      value={{ aiResponse, generateResponse, loading, messages, setUserPrompt }}
+      value={{
+        messages,
+        input,
+        setInput,
+        loading,
+        error,
+        apiKey,
+        saveKey,
+        send,
+      }}
     >
       {children}
     </AiContext.Provider>
